@@ -1,3 +1,4 @@
+# user.py
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from school_api.extensions import db, bcrypt
@@ -9,13 +10,13 @@ class User(db.Model):
     last_name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), nullable=False, unique=True)
     password = db.Column(db.String(255), nullable=False)
-    user_type = db.Column(db.String(50), nullable=False)  
+    user_type = db.Column(db.String(50), nullable=False)
     isadmin = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.now())
-    updated_at = db.Column(db.DateTime, onupdate=datetime.now())
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, onupdate=datetime.now)
 
-    events = db.relationship('Event', back_populates='user')
-    applications = db.relationship('Application', back_populates='user')
+    events = db.relationship('Event', back_populates='user', cascade="all, delete-orphan")
+    applications = db.relationship('Application', back_populates='user', cascade="all, delete-orphan")
 
     def __init__(self, first_name, last_name, email, password, user_type='admin', isadmin=False):
         self.first_name = first_name

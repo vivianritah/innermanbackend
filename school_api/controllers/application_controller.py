@@ -13,7 +13,7 @@ import logging
 
 application = Blueprint('application', __name__, url_prefix='/api/v1/application')
 
-# Set up logging
+
 logging.basicConfig(level=logging.DEBUG)
 
 @application.route('/register', methods=['POST'])
@@ -32,7 +32,7 @@ def create_application():
             logging.error("All mandatory fields must be provided.")
             return jsonify({"error": "All mandatory fields must be provided."}), 400
 
-        # Ensure user_id is valid
+       
         try:
             user_id = int(data['user_id'])
         except ValueError:

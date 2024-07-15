@@ -1,16 +1,19 @@
 from datetime import datetime
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from school_api.extensions import db
 from school_api.models.event import Event
 from school_api.decorators import admin_required
 
-events = Blueprint('events', __name__, url_prefix='/api/v1/events')
+events_blueprint = Blueprint('events', __name__, url_prefix='/api/v1/events')
 
-@events.route('/', methods=['POST'])
+@events_blueprint.route('/create', methods=['POST', 'OPTIONS'])
 @jwt_required()
 @admin_required
 def create_event():
+    if request.method == 'OPTIONS':
+        return jsonify({'message': 'CORS preflight'}), 200
+
     try:
         data = request.json
         name = data.get('name')
@@ -44,72 +47,21 @@ def create_event():
         db.session.commit()
         return jsonify({'message': 'Event created successfully'}), 201
     except Exception as e:
+        current_app.logger.error(f"Error creating event: {str(e)}")
         return jsonify({'error': str(e)}), 500
-# Get all events
-@events.route('/', methods=['GET'])
+
+@events_blueprint.route('/get_event', methods=['GET', 'OPTIONS'])
 @jwt_required()
 def get_events():
+    if request.method == 'OPTIONS':
+        return jsonify({'message': 'CORS preflight'}), 200
+
     try:
-        events = Event.query.all()
-        return jsonify([{
-            'id': event.id,
-            'name': event.name,
-            'description': event.description,
-            'date': event.date,
-            'location': event.location,
-            'user_id': event.user_id
-        } for event in events]), 200
+        current_user_id = get_jwt_identity()
+        current_app.logger.debug(f"Current user ID: {current_user_id}")
+        events = Event.query.filter_by(user_id=current_user_id).all()
+        events_list = [event.to_dict() for event in events]
+        return jsonify(events_list), 200
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# Get a single event by ID
-@events.route('/<int:event_id>', methods=['GET'])
-@jwt_required()
-def get_event(event_id):
-    try:
-        event = Event.query.get_or_404(event_id)
-        return jsonify({
-            'id': event.id,
-            'name': event.name,
-            'description': event.description,
-            'date': event.date,
-            'location': event.location,
-            'user_id': event.user_id
-        }), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-0
-
-# Update an event
-@events.route('/<int:event_id>', methods=['PUT'])
-@jwt_required()
-@admin_required
-def update_event(event_id):
-    try:
-        data = request.json
-        event = Event.query.get_or_404(event_id)
-        
-        event.name = data.get('name', event.name)
-        event.description = data.get('description', event.description)
-        event.date = datetime.fromisoformat(data.get('date', event.date.isoformat()))
-        event.location = data.get('location', event.location)
-
-        db.session.commit()
-        return jsonify({'message': 'Event updated successfully'}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# Delete an event
-@events.route('/<int:event_id>', methods=['DELETE'])
-@jwt_required()
-@admin_required
-def delete_event(event_id):
-    try:
-        event = Event.query.get_or_404(event_id)
-
-        db.session.delete(event)
-        db.session.commit()
-        return jsonify({'message': 'Event deleted successfully'}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        current_app.logger.error(f"Error fetching events: {str(e)}")
+        return jsonify({'error': 'Failed to fetch events'}), 500

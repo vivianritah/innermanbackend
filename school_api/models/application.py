@@ -4,7 +4,6 @@ from school_api.extensions import db
 class Application(db.Model):
     __tablename__ = "applications"
     id = db.Column(db.Integer, primary_key=True)
-    # event_id = db.Column(db.Integer, db.ForeignKey('events.id', ondelete='CASCADE'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
@@ -20,7 +19,6 @@ class Application(db.Model):
     guardian_email = db.Column(db.String(50), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
-    # event = db.relationship('Event', back_populates='applications', foreign_keys=[event_id])
     user = db.relationship('User', back_populates='applications', foreign_keys=[user_id])
 
     def __repr__(self):

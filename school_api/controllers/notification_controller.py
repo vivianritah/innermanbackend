@@ -3,12 +3,8 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 from school_api.extensions import db, bcrypt
 from school_api.models.notification import Notification
 
-
-
-# Create a Blueprint for the notifications controller
 notifications = Blueprint('notifications', __name__, url_prefix='/api/v1/notifications')
 
-# Get all notifications for the current user
 @notifications.route('/', methods=['GET'])
 @jwt_required()
 def get_notifications():
@@ -26,7 +22,7 @@ def get_notifications():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Create a new notification
+
 @notifications.route('/', methods=['POST'])
 @jwt_required()
 def create_notification():
@@ -50,7 +46,7 @@ def create_notification():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Update a notification
+
 @notifications.route('/<int:notification_id>', methods=['PUT'])
 @jwt_required()
 def update_notification(notification_id):
@@ -72,7 +68,7 @@ def update_notification(notification_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Delete a notification
+
 @notifications.route('/<int:notification_id>', methods=['DELETE'])
 @jwt_required()
 def delete_notification(notification_id):
