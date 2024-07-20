@@ -102,3 +102,34 @@ def delete_user():
     except Exception as e:
         print("Error:", str(e))
         return jsonify({'error': str(e)}), 500
+
+
+@auth.route('/users', methods=['GET'])
+@jwt_required()
+def get_users():
+    try:
+        current_user_id = get_jwt_identity()
+        current_user = User.query.get(current_user_id)
+
+        if not current_user:
+            return jsonify({'error': 'User not found'}), 404
+
+        if not current_user.is_admin:
+            return jsonify({'error': 'Unauthorized access'}), 403
+
+        users = User.query.all()
+        serialized_users = [{
+            'id': user.id,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'email': user.email,
+            'user_type': user.user_type,
+            'isadmin': user.isadmin,
+            'created_at': user.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'updated_at': user.updated_at.strftime('%Y-%m-%d %H:%M:%S')
+        } for user in users]
+
+        return jsonify({'users': serialized_users}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

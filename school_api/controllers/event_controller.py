@@ -1,9 +1,9 @@
-from datetime import datetime
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from school_api.extensions import db
 from school_api.models.event import Event
 from school_api.decorators import admin_required
+from datetime import datetime
 
 events_blueprint = Blueprint('events', __name__, url_prefix='/api/v1/events')
 
@@ -21,14 +21,8 @@ def create_event():
         date = data.get('date')
         location = data.get('location')
 
-        if not name:
-            return jsonify({'error': 'Name is required'}), 400
-        if not description:
-            return jsonify({'error': 'Description is required'}), 400
-        if not date:
-            return jsonify({'error': 'Date is required'}), 400
-        if not location:
-            return jsonify({'error': 'Location is required'}), 400
+        if not name or not description or not date or not location:
+            return jsonify({'error': 'All fields are required'}), 400
 
         try:
             date = datetime.fromisoformat(date)
@@ -65,3 +59,16 @@ def get_events():
     except Exception as e:
         current_app.logger.error(f"Error fetching events: {str(e)}")
         return jsonify({'error': 'Failed to fetch events'}), 500
+
+@events_blueprint.route('/<int:id>', methods=['GET'])
+@jwt_required()
+def get_event(id):
+    try:
+        event = Event.query.get(id)
+        if event:
+            return jsonify(event.to_dict()), 200
+        else:
+            return jsonify({'error': 'Event not found'}), 404
+    except Exception as e:
+        current_app.logger.error(f"Error fetching event: {str(e)}")
+        return jsonify({'error': 'Failed to fetch event'}), 500
