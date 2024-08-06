@@ -44,21 +44,33 @@ def create_event():
         current_app.logger.error(f"Error creating event: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-@events_blueprint.route('/get_event', methods=['GET', 'OPTIONS'])
+@events_blueprint.route('/get_event', methods=['GET'])
 @jwt_required()
 def get_events():
-    if request.method == 'OPTIONS':
-        return jsonify({'message': 'CORS preflight'}), 200
-
     try:
+        # Log the request headers to check if the token is included
+        current_app.logger.debug(f"Request headers: {request.headers}")
+
         current_user_id = get_jwt_identity()
         current_app.logger.debug(f"Current user ID: {current_user_id}")
+
         events = Event.query.filter_by(user_id=current_user_id).all()
-        events_list = [event.to_dict() for event in events]
+        if not events:
+            return jsonify({'message': 'No events found'}), 404
+
+        events_list = [{
+            'name': event.name,
+            'description': event.description,
+            'date': event.date,
+            'location': event.location
+        } for event in events]
         return jsonify(events_list), 200
     except Exception as e:
         current_app.logger.error(f"Error fetching events: {str(e)}")
         return jsonify({'error': 'Failed to fetch events'}), 500
+
+
+
 
 @events_blueprint.route('/<int:id>', methods=['GET'])
 @jwt_required()
@@ -72,3 +84,5 @@ def get_event(id):
     except Exception as e:
         current_app.logger.error(f"Error fetching event: {str(e)}")
         return jsonify({'error': 'Failed to fetch event'}), 500
+
+
